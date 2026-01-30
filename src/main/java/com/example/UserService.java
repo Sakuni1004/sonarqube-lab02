@@ -2,41 +2,38 @@ package com.example;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class UserService {
 
-    // SECURITY ISSUE: Hardcoded credentials
-    private String password = "admin123";
+    private static final String DB_URL = "jdbc:mysql://localhost/db";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "password";
 
-    // VULNERABILITY: SQL Injection
     public void findUser(String username) throws Exception {
+        String query = "SELECT * FROM users WHERE name = ?";
 
-        Connection conn =
-            DriverManager.getConnection("jdbc:mysql://localhost/db",
-                    "root", password);
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
-        Statement st = conn.createStatement();
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
 
-        String query =
-            "SELECT * FROM users WHERE name = '" + username + "'";
-
-        st.executeQuery(query);
-    }
-
-    // SMELL: Unused method
-    public void notUsed() {
-        System.out.println("I am never called");
+            while (rs.next()) {
+                System.out.println("User found: " + rs.getString("name"));
+            }
+        }
     }
 
     public void deleteUser(String username) throws Exception {
-        Connection conn =
-            DriverManager.getConnection("jdbc:mysql://localhost/db",
-            "root", password);
-        Statement st = conn.createStatement();
-        String query =
-            "DELETE FROM users WHERE name = '" + username + "'";
-        st.execute(query);
-}
+        String query = "DELETE FROM users WHERE name = ?";
 
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, username);
+            ps.executeUpdate();
+        }
+    }
 }
