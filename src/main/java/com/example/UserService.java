@@ -1,4 +1,4 @@
-package main.java.com.example;
+package com.example;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -28,4 +28,15 @@ public class UserService {
     public void notUsed() {
         System.out.println("I am never called");
     }
+
+    public void deleteUser(String username) throws Exception {
+        Connection conn =
+            DriverManager.getConnection("jdbc:mysql://localhost/db",
+            "root", password);
+        Statement st = conn.createStatement();
+        String query =
+            "DELETE FROM users WHERE name = '" + username + "'";
+        st.execute(query);
+}
+
 }
