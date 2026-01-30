@@ -15,7 +15,6 @@ class UserServiceException extends Exception {
 }
 
 public class UserService {
-
     private static final Logger logger = Logger.getLogger(UserService.class.getName());
 
     // Use environment variables or a config file for DB credentials
@@ -25,7 +24,6 @@ public class UserService {
 
     public void findUser(String username) throws UserServiceException {
         String query = "SELECT id, name, email FROM users WHERE name = ?"; // avoid SELECT *
-
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement ps = conn.prepareStatement(query)) {
 
@@ -33,27 +31,30 @@ public class UserService {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                // Use logger instead of System.out
-                logger.info("User found: " + rs.getString("name") + ", Email: " + rs.getString("email"));
+                // Use String.format for proper formatting
+                logger.info(String.format("User found: %s, Email: %s", 
+                          rs.getString("name"), rs.getString("email")));
             }
 
         } catch (SQLException e) {
-            throw new UserServiceException("Error finding user: " + username, e);
+            throw new UserServiceException(String.format("Error finding user: %s", username), e);
         }
     }
 
     public void deleteUser(String username) throws UserServiceException {
         String query = "DELETE FROM users WHERE name = ?";
-
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, username);
             int rowsAffected = ps.executeUpdate();
-            logger.info("Deleted " + rowsAffected + " user(s) with name: " + username);
+
+            // Use String.format instead of concatenation
+            logger.info(String.format("Deleted %d user(s) with name: %s", rowsAffected, username));
 
         } catch (SQLException e) {
-            throw new UserServiceException("Error deleting user: " + username, e);
+            throw new UserServiceException(String.format("Error deleting user: %s", username), e);
         }
     }
 }
+
