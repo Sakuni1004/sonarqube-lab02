@@ -1,3 +1,4 @@
-main\java\com\example\App.class
-main\java\com\example\Calculator.class
-main\java\com\example\UserService.class
+example\Calculator.class
+example\UserService.class
+example\App.class
+example\UserServiceException.class
