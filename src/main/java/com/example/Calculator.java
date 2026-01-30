@@ -10,25 +10,21 @@ public class Calculator {
     private static final String POW = "pow";
 
     public int calculate(int a, int b, String op) {
-
         switch (op) {
             case ADD:
                 return add(a, b);
 
             case SUB:
-                return a - b;
+                return sub(a, b);
 
             case MUL:
-                return a * b;
+                return mul(a, b);
 
             case DIV:
-                if (b == 0) {
-                    throw new IllegalArgumentException("Division by zero");
-                }
-                return a / b;
+                return div(a, b);
 
             case MOD:
-                return a % b;
+                return mod(a, b);
 
             case POW:
                 return power(a, b);
@@ -42,7 +38,32 @@ public class Calculator {
         return a + b;
     }
 
+    private int sub(int a, int b) {
+        return a - b;
+    }
+
+    private int mul(int a, int b) {
+        return a * b;
+    }
+
+    private int div(int a, int b) {
+        if (b == 0) {
+            throw new IllegalArgumentException("Division by zero");
+        }
+        return a / b;
+    }
+
+    private int mod(int a, int b) {
+        if (b == 0) {
+            throw new IllegalArgumentException("Modulo by zero");
+        }
+        return a % b;
+    }
+
     private int power(int a, int b) {
+        if (b < 0) {
+            throw new IllegalArgumentException("Negative exponent not supported");
+        }
         int result = 1;
         for (int i = 0; i < b; i++) {
             result *= a;

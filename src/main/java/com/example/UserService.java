@@ -15,42 +15,45 @@ class UserServiceException extends Exception {
 }
 
 public class UserService {
+
     private static final Logger logger = Logger.getLogger(UserService.class.getName());
 
-    // Use environment variables or a config file for DB credentials
+    // DB credentials from environment
     private static final String DB_URL = System.getenv("DB_URL");
     private static final String DB_USER = System.getenv("DB_USER");
     private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
+    // Find user by name
     public void findUser(String username) throws UserServiceException {
         String query = "SELECT id, name, email FROM users WHERE name = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, username);
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.isBeforeFirst()) {
+                boolean hasResults = false;
+
+                while (rs.next()) {
+                    hasResults = true;
+                    final String name = rs.getString("name");
+                    final String email = rs.getString("email");
+
+                    // Lazy logging, evaluated only if INFO enabled
+                    logger.info(() -> String.format("User found: %s, Email: %s", name, email));
+                }
+
+                if (!hasResults) {
                     logger.info(() -> String.format("No user found with name: %s", username));
-                } else {
-                    while (rs.next()) {
-                        logger.info(() -> {
-                            try {
-                                return String.format("User found: %s, Email: %s",
-                                        rs.getString("name"), rs.getString("email"));
-                            } catch (SQLException e) {
-                                e.printStackTrace();
-                            }
-                            return query;
-                        });
-                    }
                 }
             }
-      
+
         } catch (SQLException e) {
             throw new UserServiceException(String.format("Error finding user: %s", username), e);
         }
     }
 
+    // Delete user by name
     public void deleteUser(String username) throws UserServiceException {
         String query = "DELETE FROM users WHERE name = ?";
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
@@ -58,8 +61,9 @@ public class UserService {
 
             ps.setString(1, username);
             int rowsAffected = ps.executeUpdate();
-            logger.info(() -> String.format("Deleted %d user(s) with name: %s", rowsAffected, username));
 
+            // Lazy logging
+            logger.info(() -> String.format("Deleted %d user(s) with name: %s", rowsAffected, username));
 
         } catch (SQLException e) {
             throw new UserServiceException(String.format("Error deleting user: %s", username), e);
