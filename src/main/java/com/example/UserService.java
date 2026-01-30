@@ -1,18 +1,29 @@
-package com.example;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+// Custom exception for UserService
+class UserServiceException extends Exception {
+    public UserServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
 
 public class UserService {
 
-    private static final String DB_URL = "jdbc:mysql://localhost/db";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "password";
+    private static final Logger logger = Logger.getLogger(UserService.class.getName());
 
-    public void findUser(String username) throws Exception {
-        String query = "SELECT * FROM users WHERE name = ?";
+    // Use environment variables or a config file for DB credentials
+    private static final String DB_URL = System.getenv("DB_URL");
+    private static final String DB_USER = System.getenv("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
+
+    public void findUser(String username) throws UserServiceException {
+        String query = "SELECT id, name, email FROM users WHERE name = ?"; // avoid SELECT *
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement ps = conn.prepareStatement(query)) {
@@ -21,19 +32,26 @@ public class UserService {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                System.out.println("User found: " + rs.getString("name"));
+                logger.info("User found: " + rs.getString("name") + ", Email: " + rs.getString("email"));
             }
+
+        } catch (SQLException e) {
+            throw new UserServiceException("Error finding user: " + username, e);
         }
     }
 
-    public void deleteUser(String username) throws Exception {
+    public void deleteUser(String username) throws UserServiceException {
         String query = "DELETE FROM users WHERE name = ?";
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, username);
-            ps.executeUpdate();
+            int rowsAffected = ps.executeUpdate();
+            logger.info("Deleted " + rowsAffected + " user(s) with name: " + username);
+
+        } catch (SQLException e) {
+            throw new UserServiceException("Error deleting user: " + username, e);
         }
     }
 }
